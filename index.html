@@ -133,8 +133,8 @@ function createBrandCluster(x, y, csv) {
         // Add a title to the center circle group
         svg.append("text")
         .attr("x", width/2)
-        .attr("y", 425)
-        .attr("font-size", 18)
+        .attr("y", 485)
+        .attr("font-size", 16)
         .attr("alignment-baseline", "central")
         .attr("text-anchor", "middle")
         .attr("font-family", "Raleway")
@@ -161,8 +161,8 @@ function createBrandCluster(x, y, csv) {
         brandCircs.append("image")
         .attr("x", function(d){ return d.x; })
         .attr("y", function(d){ return d.y; })
-        .attr("width", function(d){ return d.r*2 - 20; } )
-        .attr("height", function(d){ return d.r*2 - 20; } )
+        .attr("width", function(d){ return d.r*2 - 30; } )
+        .attr("height", function(d){ return d.r*2 - 30; } )
         .attr("href",  function(d) {
             for (i = 0; i < brands.length; i++) {
                 if (brands[i][0] == d.id)
@@ -171,7 +171,7 @@ function createBrandCluster(x, y, csv) {
             // If not image is found, return an empty path
             return "";
         })
-        .attr("style", "transform: translate(-50%, -50%)");
+        .attr("style", "transform: translate(-10%, -10%)");
     });
 }
 function createMap(x, y, brand) {
@@ -220,7 +220,7 @@ function createMap(x, y, brand) {
         .attr("width", 100)
         .attr("height", 50)
         .attr("href", brand[8])
-        .attr("style", "transform: translate(-50%, -50%)");
+        .attr("style", "transform: translate(-13%, -5%)");
         // Iterate and draw data for each state
         gridMap.forEach(function (state) {
             var size = searchScale(dataDict[state.name]);
