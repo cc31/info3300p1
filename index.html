@@ -3,23 +3,20 @@
 <title>INFO/CS 3300 - Project 1 (hju3, cc987, saw294)</title>
 <link href="https://fonts.googleapis.com/css?family=Raleway:600" rel="stylesheet">
 <script src="https://d3js.org/d3.v4.min.js"></script>
-<script src="https://d3js.org/topojson.v2.min.js"></script>
+<script src="http://d3js.org/topojson.v2.min.js"></script>
 </head>
 <body>
 
 <h1 id="title">Search Interest of Select Clothing Brands in the United States</h1>
 
 <script>
-
 var gridMap;
 var gridDict = {};
 var popDict = {};
 var popScale;
-
 // The visualization is oriented as a circle
 var visualizationCenter = [660, 650];
 var visualizationRadius = 450;
-
 // Define the brands, their data files, their representation color, and their logos
 // Image sources are noted respectively
 var brands = [["Carhartt", "carhartt.csv", "#a63603", "#d94801", "#f16913", "#fd8d3c", "#fdae6b",
@@ -43,23 +40,19 @@ var brands = [["Carhartt", "carhartt.csv", "#a63603", "#d94801", "#f16913", "#fd
               ["Lululemon", "lulu.csv", "#ce1256", "#e7298a", "#df65b0", "#c994c7", "#d4b9da",
                "lululemon-white.png", //https://static1.squarespace.com/static/555e4d53e4b07f0c954148e2/571eaf69356fb086c58d6dbb/573a2ac4e707eb8fa9e288f7/1463429850129/lululemon+logo.png (modified)
                "lululemon.png"]]; //http://www.bloodknots.com/lululemon--life-in-luon.html
-
 // Declare CSV parsing functions for later
 function parseBrandRow(row) {
     return { state: row["Region"], value: Number(row["SearchInterest"]) };
 }
-
 function parseCompareRow(row) {
     return { brand: row["Brand"], value: Number(row["SearchInterest"]) };d0d1e6
 }
-
 function parseGridRow(row) {
     return { x: Number(row["x"]),
              y: Number(row["y"]),
              abbrev: row["key"],
              name: row["name"] };
 }
-
 // Population data from: http://worldpopulationreview.com/states/
 // Gridmap data used from: https://github.com/kristw/gridmap-layout-usa
 // (with MIT license)
@@ -74,17 +67,14 @@ d3.queue()
     gridMap.forEach(function (d) {
         gridDict[d.name] = d;
     });
-
     popData.forEach(function (d) {
         popDict[d.stateName] = d.population;
     });
     var popExtent = d3.extent(popData, function(d) { return d.population} );
     popScale = d3.scaleLog().domain(popExtent).range([0, 5]);
-
     // Prepare to position brand graphs in equidistant locations around a circle
     var degInc = 360.0/(brands.length);
     var degCntr = 20;
-
     // Iterate through every brand, and draw its data map in a circular configuration
     brands.forEach(function (d) {
         // Calculate each graph's coordinates in Polar Coordinates, then convert
@@ -94,44 +84,35 @@ d3.queue()
         var y = visualizationCenter[1] +
                 (visualizationRadius * Math.sin((Math.PI / 180) * degCntr));
         createMap(x, y, d);
-
         degCntr += degInc;
     });
-
     createBrandCluster(visualizationCenter[0], visualizationCenter[1], "all-brands.csv");
-
     createLegend(900, 45);
 });
-
 function createBrandCluster(x, y, csv) {
     // Store width and height for convenience later
     var width = 500;
     var height = 500;
-
     // Generate a new SVG element and position it as specified
     var svg = d3.select("body").append("svg").attr("height", height).attr("width", width)
     .attr("style", "position: absolute;" + 
                    "top: " + (y - height/2) + ";" + 
                    "left: " + (x - width/2) + ";");
-
     // Parse search data for the brand from a CSV
     d3.csv(csv, parseCompareRow, function(error, compareData) {
         var dataDict = {}
         compareData.forEach(function (d) {
             dataDict[d.brand] = d.value;
         });
-
         // Scale the search interest values for each brand, represented by size
         var searchExtent = d3.extent(compareData, function(d) { return d.value; });
         var scaleRange = [50,90];
         var searchScale = d3.scaleLinear().domain(searchExtent).range(scaleRange);
-
         // Initialize parameters for circle packing
         var pack = d3.pack()
         .size([svg.attr("width"), svg.attr("height")])
         .radius(function(d) { return searchScale(dataDict[d.id]); })
         .padding(3);
-
         // Pack is heirarchy and thus needs a root node, so we append one
         compareData.push({brand: "root"})
         var stratify = d3.stratify()
@@ -142,16 +123,13 @@ function createBrandCluster(x, y, csv) {
             else
                 return "root";
         });
-
         // Convert data to a heirarchical format
         var root = stratify(compareData);
         pack(root);
-
         // Now that the data is formatted correctly, get rid of the root to make
         // the circle pack look nice
         var brandNodes = root.descendants();
         brandNodes.shift();
-
         // Add a title to the center circle group
         svg.append("text")
         .attr("x", width/2)
@@ -162,14 +140,12 @@ function createBrandCluster(x, y, csv) {
         .attr("font-family", "Raleway")
         .attr("fill", "#000")
         .text("National Search Interest");
-
         // Actually add all the circles
         var brandCircs = svg.append("g")
         .attr("transform", "translate(0,0)")
         .selectAll(".bubble")
         .data(brandNodes)
         .enter();
-
         brandCircs.append("circle")
         .attr("cx", function(d){ return d.x; })
         .attr("cy", function(d){ return d.y; })
@@ -179,11 +155,9 @@ function createBrandCluster(x, y, csv) {
                 if (brands[i][0] == d.id)
                     return brands[i][2];
             }
-
             // If there is a problem finding the brand's color, grey the circle out
             return "#999999";
         });
-
         brandCircs.append("image")
         .attr("x", function(d){ return d.x; })
         .attr("y", function(d){ return d.y; })
@@ -194,25 +168,21 @@ function createBrandCluster(x, y, csv) {
                 if (brands[i][0] == d.id)
                     return brands[i][7];
             }
-
             // If not image is found, return an empty path
             return "";
         })
         .attr("style", "transform: translate(-50%, -50%)");
     });
 }
-
 function createMap(x, y, brand) {
     // Store width and height for convenience later
     var width = 450;
     var height = 300;
-
     // Generate a new SVG element and position it as specified
     var svg = d3.select("body").append("svg").attr("height", height).attr("width", width)
     .attr("style", "position: absolute;" + 
                    "top: " + (y - height/2) + ";" + 
                    "left: " + (x - width/2) + ";");
-
     // Parse search data for the brand from a CSV
     d3.csv(brand[1], parseBrandRow, function(error, brandData) {
         // Make data easily accessible later as a dict (state name -> value)
@@ -221,32 +191,27 @@ function createMap(x, y, brand) {
             if (d.value != -1)
                 dataDict[d.state] = d.value;
         });
-
         // Scale up the grid coordinates from the CSV to fit the SVG
         var xExtent = d3.extent(gridMap,
             function(d) { return d.x; });
         var xScale = d3.scaleLinear()
         .domain(xExtent)
         .range([80, width - 80])
-
         var yExtent = d3.extent(gridMap,
             function(d) { return d.y; });
         var yScale = d3.scaleLinear()
         .domain(yExtent)
         .range([80, height - 80]);
-
         // Scale the search interest values for each state, represented by size
         var searchExtent = d3.extent(brandData,
             function(d) { return d.value; });
         var searchScale = d3.scaleLinear()
         .domain(searchExtent)
         .range([13, svg.attr("width")/(xExtent[1] - xExtent[0] + 6)]);
-
         // Scale the population values for each state, represented by color
         var colorScale = d3.scaleLinear()
         .domain([0, 1, 2, 3, 4])
         .range([brand[6], brand[5], brand[4], brand[3], brand[2]]);
-
         // Draw the brand title
         svg.append("image")
         .attr("x", svg.attr("width")/2)
@@ -256,11 +221,9 @@ function createMap(x, y, brand) {
         .attr("height", 50)
         .attr("href", brand[8])
         .attr("style", "transform: translate(-50%, -50%)");
-
         // Iterate and draw data for each state
         gridMap.forEach(function (state) {
             var size = searchScale(dataDict[state.name]);
-
             // Occasionally some states do not have search data - in this case
             // do not attempt to draw (avoid errors)
             if (!isNaN(size)) {
@@ -270,7 +233,6 @@ function createMap(x, y, brand) {
                 .attr("cy", xScale(state.y))
                 .attr("r", size/2)
                 .attr("fill", colorScale(popScale(popDict[state.name])));
-
                 // Label each state appropriately
                 svg.append("text")
                 .attr("x", xScale(state.x))
@@ -289,7 +251,6 @@ function createMap(x, y, brand) {
                 .attr("cy", xScale(state.y))
                 .attr("fill", "#ABABAB")
                 .attr("r", 7);
-
                 svg.append("text")
                 .attr("x", xScale(state.x))
                 .attr("y", xScale(state.y))
@@ -303,13 +264,11 @@ function createMap(x, y, brand) {
         });
     });
 }
-
 function createLegend(x, y) {
     var svg = d3.select("body").append("svg").attr("height", 200).attr("width", 400)
     .attr("style", "position: absolute;" + 
                    "top: " + y + ";" + 
                    "left: " + x + ";");
-
     // Define the gradient for later
     var defs = svg.append("defs");
     var gradient = defs.append("linearGradient").attr("id", "legendGradient");
@@ -321,7 +280,6 @@ function createLegend(x, y) {
     gradient.append("stop") 
     .attr("offset", "100%")   
     .attr("stop-color", "#a63603");
-
     // Add legend text
     // Draw the search interest/size scale
     svg.append("text")
@@ -332,7 +290,6 @@ function createLegend(x, y) {
     .attr("text-anchor", "middle")
     .attr("font-family", "Raleway")
     .text("Search Interest");
-
     svg.append("text")
     .attr("x", 168)
     .attr("y", 75)
@@ -341,7 +298,6 @@ function createLegend(x, y) {
     .attr("text-anchor", "middle")
     .attr("font-family", "Raleway")
     .text("By Google search popularity, relative to all other queries, Mar. 2012 - Mar. 2017");
-
     svg.append("text")
     .attr("x", 102)
     .attr("y", 100)
@@ -350,7 +306,6 @@ function createLegend(x, y) {
     .attr("text-anchor", "end")
     .attr("font-family", "Raleway")
     .text("Least popular");
-
     svg.append("text")
     .attr("x", 235)
     .attr("y", 100)
@@ -358,31 +313,26 @@ function createLegend(x, y) {
     .attr("alignment-baseline", "central")
     .attr("font-family", "Raleway")
     .text("Most popular");
-
     svg.append("circle")
     .attr("cx", 120)
     .attr("cy", 100)
     .attr("r", 7)
     .attr("fill", "#d94801");
-
     svg.append("circle")
     .attr("cx", 145)
     .attr("cy", 100)
     .attr("r", 9)
     .attr("fill", "#d94801");
-
     svg.append("circle")
     .attr("cx", 175)
     .attr("cy", 100)
     .attr("r", 11)
     .attr("fill", "#d94801");
-
     svg.append("circle")
     .attr("cx", 210)
     .attr("cy", 100)
     .attr("r", 13)
     .attr("fill", "#d94801");
-
     // Draw the gradient scale
     svg.append("rect")
     .attr("x", 115)
@@ -390,7 +340,6 @@ function createLegend(x, y) {
     .attr("width", 105)
     .attr("height", 10)
     .style("fill", "url(#legendGradient)");
-
     svg.append("text")
     .attr("x", 165)
     .attr("y", 130)
@@ -399,7 +348,6 @@ function createLegend(x, y) {
     .attr("text-anchor", "middle")
     .attr("font-family", "Raleway")
     .text("Population");
-
     svg.append("text")
     .attr("x", 168)
     .attr("y", 145)
@@ -408,7 +356,6 @@ function createLegend(x, y) {
     .attr("text-anchor", "middle")
     .attr("font-family", "Raleway")
     .text("As of 2017");
-
     svg.append("text")
     .attr("x", 102)
     .attr("y", 160)
@@ -417,7 +364,6 @@ function createLegend(x, y) {
     .attr("text-anchor", "end")
     .attr("font-family", "Raleway")
     .text("Smallest");
-
     svg.append("text")
     .attr("x", 99)
     .attr("y", 172)
@@ -426,7 +372,6 @@ function createLegend(x, y) {
     .attr("text-anchor", "end")
     .attr("font-family", "Raleway")
     .text("(Lightest)");
-
     svg.append("text")
     .attr("x", 235)
     .attr("y", 160)
@@ -434,7 +379,6 @@ function createLegend(x, y) {
     .attr("alignment-baseline", "central")
     .attr("font-family", "Raleway")
     .text("Largest");
-
     svg.append("text")
     .attr("x", 236)
     .attr("y", 172)
@@ -442,14 +386,12 @@ function createLegend(x, y) {
     .attr("alignment-baseline", "central")
     .attr("font-family", "Raleway")
     .text("(Darkest)");
-
     // Draw invalid data marker
     svg.append("circle")
     .attr("cx", 118)
     .attr("cy", 190)
     .attr("r", 6)
     .attr("fill", "#ABABAB");
-
     svg.append("text")
     .attr("x", 135)
     .attr("y", 190)
@@ -458,7 +400,6 @@ function createLegend(x, y) {
     .attr("font-family", "Raleway")
     .text("No data available");
 }
-
 </script>
 <style>
     #title {
